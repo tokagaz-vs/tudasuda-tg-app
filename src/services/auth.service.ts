@@ -2,7 +2,6 @@ import { supabase } from './supabase';
 import type { Profile, TelegramUser } from '../types';
 
 export class AuthService {
-  // Получить или создать профиль на основе Telegram данных
   static async syncWithTelegram(telegramUser: TelegramUser): Promise<{ data: Profile | null; error: any }> {
     try {
       const userId = telegramUser.id.toString();
@@ -14,12 +13,16 @@ export class AuthService {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Используем maybeSingle вместо single
+
+      if (fetchError) {
+        console.error('❌ Ошибка получения профиля:', fetchError);
+      }
 
       if (existingProfile) {
         console.log('✅ Профиль найден, обновляем данные');
         
-        // Обновляем данные из Telegram (на случай если изменились)
+        // Обновляем данные из Telegram
         const { data: updated, error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -30,37 +33,38 @@ export class AuthService {
           })
           .eq('id', userId)
           .select()
-          .single();
+          .maybeSingle(); // Используем maybeSingle
 
         if (updateError) {
           console.error('❌ Ошибка обновления профиля:', updateError);
+          return { data: existingProfile, error: updateError };
         }
 
-        return { data: updated || existingProfile, error: updateError };
+        return { data: updated || existingProfile, error: null };
       }
 
       console.log('📝 Создаем новый профиль');
 
-      // Создаем новый профиль
+      // Создаем новый профиль без лишних полей
       const newProfile = {
         id: userId,
         username: telegramUser.username || `user${userId}`,
         full_name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-        avatar_url: telegramUser.photo_url || null,
+        avatar_url: telegramUser.photo_url,
         points: 0,
-        is_premium: false,
       };
 
       console.log('📤 Новый профиль:', newProfile);
 
       const { data, error } = await supabase
         .from('profiles')
-        .insert([newProfile])
+        .insert(newProfile)
         .select()
-        .single();
+        .maybeSingle(); // Используем maybeSingle
 
       if (error) {
         console.error('❌ Ошибка создания профиля:', error);
+        console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
       } else {
         console.log('✅ Профиль создан:', data);
       }

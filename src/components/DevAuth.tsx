@@ -56,34 +56,35 @@ export const DevAuth = () => {
     }
   };
 
-  // Показываем всегда для отладки
- // if (!import.meta.env.DEV) return null;
+  // В самом начале компонента, замени проверку:
+// Показываем всегда
+// if (!import.meta.env.DEV) return null;
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '60px',
-          right: '10px',
-          width: '50px',
-          height: '50px',
-          borderRadius: '25px',
-          backgroundColor: theme.colors.primary,
-          border: 'none',
-          color: '#FFFFFF',
-          fontSize: '24px',
-          cursor: 'pointer',
-          zIndex: 9998,
-          boxShadow: theme.shadows.lg.boxShadow,
-        }}
-        title="Тестовая авторизация"
-      >
-        🧪
-      </button>
-    );
-  }
+if (!isOpen) {
+  return (
+    <button
+      onClick={() => setIsOpen(true)}
+      style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        width: '60px',
+        height: '60px',
+        borderRadius: '30px',
+        backgroundColor: theme.colors.primary,
+        border: 'none',
+        color: '#FFFFFF',
+        fontSize: '28px',
+        cursor: 'pointer',
+        zIndex: 9999,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      }}
+      title="Тестовая авторизация"
+    >
+      🧪
+    </button>
+  );
+}
 
   return (
     <div
