@@ -1,68 +1,139 @@
 import WebApp from '@twa-dev/sdk';
 
 export const telegram = {
+  // Проверка поддержки функции
+  isVersionAtLeast: (version: string) => {
+    return WebApp.version >= version;
+  },
+
+  // Показать кнопку "Назад"
   showBackButton: (onClick: () => void) => {
-    WebApp.BackButton.show();
-    WebApp.BackButton.onClick(onClick);
+    if (WebApp.BackButton) {
+      WebApp.BackButton.show();
+      WebApp.BackButton.onClick(onClick);
+    }
   },
 
   hideBackButton: () => {
-    WebApp.BackButton.hide();
+    if (WebApp.BackButton) {
+      WebApp.BackButton.hide();
+    }
   },
 
+  // Главная кнопка
   showMainButton: (text: string, onClick: () => void) => {
-    WebApp.MainButton.setText(text);
-    WebApp.MainButton.show();
-    WebApp.MainButton.onClick(onClick);
+    if (WebApp.MainButton) {
+      WebApp.MainButton.setText(text);
+      WebApp.MainButton.show();
+      WebApp.MainButton.onClick(onClick);
+    }
   },
 
   hideMainButton: () => {
-    WebApp.MainButton.hide();
+    if (WebApp.MainButton) {
+      WebApp.MainButton.hide();
+    }
   },
 
   setMainButtonText: (text: string) => {
-    WebApp.MainButton.setText(text);
+    if (WebApp.MainButton) {
+      WebApp.MainButton.setText(text);
+    }
   },
 
+  // Уведомления
   showAlert: (message: string) => {
-    WebApp.showAlert(message);
+    if (typeof WebApp.showAlert === 'function') {
+      WebApp.showAlert(message);
+    } else {
+      alert(message);
+    }
   },
 
   showConfirm: (message: string): Promise<boolean> => {
     return new Promise((resolve) => {
-      WebApp.showConfirm(message, resolve);
+      if (typeof WebApp.showConfirm === 'function') {
+        WebApp.showConfirm(message, resolve);
+      } else {
+        resolve(confirm(message));
+      }
     });
   },
 
+  // Haptic feedback
   impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => {
-    WebApp.HapticFeedback.impactOccurred(style);
+    try {
+      if (WebApp.HapticFeedback?.impactOccurred) {
+        WebApp.HapticFeedback.impactOccurred(style);
+      }
+    } catch (e) {
+      // Haptic не поддерживается
+    }
   },
 
   notificationOccurred: (type: 'error' | 'success' | 'warning') => {
-    WebApp.HapticFeedback.notificationOccurred(type);
+    try {
+      if (WebApp.HapticFeedback?.notificationOccurred) {
+        WebApp.HapticFeedback.notificationOccurred(type);
+      }
+    } catch (e) {
+      // Haptic не поддерживается
+    }
   },
 
   selectionChanged: () => {
-    WebApp.HapticFeedback.selectionChanged();
+    try {
+      if (WebApp.HapticFeedback?.selectionChanged) {
+        WebApp.HapticFeedback.selectionChanged();
+      }
+    } catch (e) {
+      // Haptic не поддерживается
+    }
   },
 
+  // Открыть ссылку
   openLink: (url: string, tryInstantView = false) => {
-    WebApp.openLink(url, { try_instant_view: tryInstantView });
+    if (typeof WebApp.openLink === 'function') {
+      WebApp.openLink(url, { try_instant_view: tryInstantView });
+    } else {
+      window.open(url, '_blank');
+    }
   },
 
   openTelegramLink: (url: string) => {
-    WebApp.openTelegramLink(url);
+    if (typeof WebApp.openTelegramLink === 'function') {
+      WebApp.openTelegramLink(url);
+    } else {
+      window.open(url, '_blank');
+    }
   },
 
+  // Закрыть приложение
   close: () => {
-    WebApp.close();
+    if (typeof WebApp.close === 'function') {
+      WebApp.close();
+    }
   },
 
+  // Готовность
   ready: () => {
     WebApp.ready();
   },
 
+  // Развернуть
   expand: () => {
-    WebApp.expand();
+    if (typeof WebApp.expand === 'function') {
+      WebApp.expand();
+    }
+  },
+
+  // Получить версию
+  getVersion: () => {
+    return WebApp.version || '6.0';
+  },
+
+  // Получить платформу
+  getPlatform: () => {
+    return WebApp.platform || 'unknown';
   },
 };
