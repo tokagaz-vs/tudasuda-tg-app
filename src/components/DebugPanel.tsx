@@ -9,7 +9,8 @@ export const DebugPanel = () => {
   const { user: telegramUser, webApp } = useTelegram();
   const { user } = useAuthStore();
 
-  if (!import.meta.env.DEV) return null;
+  // Показываем всегда для отладки
+  // if (!import.meta.env.DEV) return null;
 
   if (!show) {
     return (

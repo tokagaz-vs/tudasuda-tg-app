@@ -374,6 +374,40 @@ export const HomePage = () => {
         )}
       </div>
 
+      {/* Временная кнопка для проверки */}
+<div style={{
+  position: 'fixed',
+  top: '10px',
+  right: '10px',
+  zIndex: 10000,
+}}>
+  <button
+    onClick={() => {
+      console.log('=== DEBUG INFO ===');
+      console.log('Telegram User:', telegramUser);
+      console.log('App User:', user);
+      telegram.showAlert(
+        `Telegram ID: ${telegramUser?.id || 'Нет'}\n` +
+        `Username: ${telegramUser?.username || 'Нет'}\n` +
+        `App User ID: ${user?.id || 'Нет'}\n` +
+        `Avatar: ${user?.avatar_url || 'Нет'}`
+      );
+    }}
+    style={{
+      padding: '10px 15px',
+      backgroundColor: theme.colors.primary,
+      color: '#FFFFFF',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: 'pointer',
+    }}
+  >
+    🐛 Debug
+  </button>
+</div>
+
       {/* Промо-баннер */}
       <div style={{ padding: '0 20px 24px' }}>
         <Card variant="gradient" gradient={[theme.colors.secondary, '#18A0FB'] as const}>

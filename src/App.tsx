@@ -21,6 +21,8 @@ function AppContent() {
     webApp.expand();
     
     console.log('🚀 App initialized');
+    console.log('🌐 Environment:', import.meta.env.MODE);
+    console.log('📱 Platform:', webApp.platform);
     
     // Проверяем поддержку методов перед использованием
     try {
@@ -67,14 +69,14 @@ function AppContent() {
         </Routes>
       </BrowserRouter>
       
-      {/* Тестовая авторизация для разработки */}
+      {/* Тестовая авторизация */}
       <DevAuth />
       
-      {/* Debug панель для разработки */}
+      {/* Debug панель */}
       <DebugPanel />
       
-      {/* Показываем текущего пользователя в dev режиме */}
-      {import.meta.env.DEV && user && (
+      {/* Показываем текущего пользователя */}
+      {user && (
         <div style={{
           position: 'fixed',
           bottom: '10px',

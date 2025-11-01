@@ -56,8 +56,8 @@ export const DevAuth = () => {
     }
   };
 
-  // Показываем только в development
-  if (!import.meta.env.DEV) return null;
+  // Показываем всегда для отладки
+ // if (!import.meta.env.DEV) return null;
 
   if (!isOpen) {
     return (
