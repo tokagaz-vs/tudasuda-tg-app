@@ -4,9 +4,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useTelegram } from '../hooks/useTelegram';
 import { useAuthStore } from '../store/authStore';
 import { questService } from '../services/quest.service';
-import { AuthService } from '../services/auth.service';
+import { supabase } from '../services/supabase';
 import { telegram } from '../utils/telegram';
-import { Card, Button, GlassPanel } from '../components/ui';
+import { Card, Button } from '../components/ui';
 import {
   Star,
   Trophy,
@@ -17,9 +17,6 @@ import {
   HelpCircle,
   Info,
   LogOut,
-  Camera,
-  X,
-  Check,
   Zap,
   Crown,
 } from 'lucide-react';
@@ -44,16 +41,10 @@ export const ProfilePage = () => {
 
   // Форма редактирования
   const [editForm, setEditForm] = useState({
-    username: user?.username || '',
-    full_name: user?.full_name || '',
-    avatar_url: user?.avatar_url || '',
+    username: '',
+    full_name: '',
+    avatar_url: '',
   });
-
-  useEffect(() => {
-    if (telegramUser && !user) {
-      authenticateUser();
-    }
-  }, [telegramUser]);
 
   useEffect(() => {
     if (user) {
@@ -71,18 +62,6 @@ export const ProfilePage = () => {
     return () => telegram.hideBackButton();
   }, [navigate]);
 
-  const authenticateUser = async () => {
-  if (!telegramUser) return;
-
-  const { data, error } = await AuthService.syncWithTelegram(telegramUser);
-  
-  if (data) {
-    setUser(data);
-  } else {
-    console.error('Failed to sync profile:', error);
-  }
-};
-
   const loadUserStats = async () => {
     if (!user) return;
 
@@ -97,22 +76,58 @@ export const ProfilePage = () => {
         inProgress = quests.filter((q: any) => q.status === 'in_progress').length;
       }
 
+      // Получаем ранг пользователя
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, points')
+        .order('points', { ascending: false });
+
+      const rank = profiles ? profiles.findIndex((p) => p.id === user.id) + 1 : 0;
+
       setStats({
         completedQuests: completed,
         inProgressQuests: inProgress,
         totalPoints: user.points || 0,
-        achievements: 0, // TODO: загрузить достижения
-        rank: 1, // TODO: вычислить ранг
+        achievements: 0,
+        rank: rank || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
   };
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        username: editForm.username.trim() || user.username,
+        full_name: editForm.full_name.trim() || user.full_name,
+        avatar_url: editForm.avatar_url.trim() || user.avatar_url,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    setIsLoading(false);
+
+    if (data) {
+      setUser(data);
+      setShowEditModal(false);
+      telegram.showAlert('Профиль обновлен!');
+    } else {
+      telegram.showAlert('Ошибка при обновлении профиля');
+      console.error('Profile update error:', error);
+    }
+  };
+
   const handleSignOut = () => {
     telegram.showConfirm('Вы уверены, что хотите выйти?').then((confirmed) => {
       if (confirmed) {
-        // Очищаем store
         setUser(null);
         navigate('/');
       }
@@ -278,6 +293,7 @@ export const ProfilePage = () => {
               fontSize: '48px',
               marginBottom: '16px',
               position: 'relative',
+              overflow: 'hidden',
             }}
           >
             {user?.avatar_url || telegramUser?.photo_url ? (
@@ -313,9 +329,33 @@ export const ProfilePage = () => {
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#FFFFFF', marginBottom: '4px' }}>
             {user?.full_name || telegramUser?.first_name || 'Путешественник'}
           </h1>
-          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.8)' }}>
+          <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.8)', marginBottom: '12px' }}>
             @{user?.username || telegramUser?.username || 'user'}
           </p>
+
+          {/* Кнопка редактирования */}
+          <button
+            onClick={() => {
+              setEditForm({
+                username: user?.username || '',
+                full_name: user?.full_name || '',
+                avatar_url: user?.avatar_url || '',
+              });
+              setShowEditModal(true);
+            }}
+            style={{
+              padding: '8px 24px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '999px',
+              color: '#FFFFFF',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            Редактировать профиль
+          </button>
         </div>
       </div>
 
@@ -344,7 +384,7 @@ export const ProfilePage = () => {
           />
           <StatCard
             icon={TrendingUp}
-            value={`#${stats.rank}`}
+            value={stats.rank > 0 ? `#${stats.rank}` : '-'}
             label="Место"
             gradient={`linear-gradient(135deg, ${theme.colors.success}, #10B981)`}
           />
@@ -396,13 +436,124 @@ export const ProfilePage = () => {
             icon={Info}
             title="О приложении"
             subtitle="Версия 1.0.0"
-            onPress={() =>
-              telegram.showAlert('TudaSuda v1.0.0\n\n© 2024 Все права защищены')
-            }
+            onPress={() => telegram.showAlert('TudaSuda v1.0.0\n\n© 2024 Все права защищены')}
           />
           <MenuItem icon={LogOut} title="Выйти" onPress={handleSignOut} danger />
         </Card>
       </div>
+
+      {/* Модалка редактирования */}
+      {showEditModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderRadius: theme.borderRadius.xl + 'px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px',
+            }}
+          >
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: theme.colors.text, marginBottom: '20px' }}>
+              Редактировать профиль
+            </h2>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px', display: 'block' }}>
+                Имя пользователя
+              </label>
+              <input
+                type="text"
+                value={editForm.username}
+                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: theme.colors.background,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.borderRadius.md + 'px',
+                  color: theme.colors.text,
+                  fontSize: '16px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px', display: 'block' }}>
+                Полное имя
+              </label>
+              <input
+                type="text"
+                value={editForm.full_name}
+                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: theme.colors.background,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.borderRadius.md + 'px',
+                  color: theme.colors.text,
+                  fontSize: '16px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '14px', color: theme.colors.textSecondary, marginBottom: '8px', display: 'block' }}>
+                URL фото профиля
+              </label>
+              <input
+                type="text"
+                value={editForm.avatar_url}
+                onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
+                placeholder="https://..."
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: theme.colors.background,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.borderRadius.md + 'px',
+                  color: theme.colors.text,
+                  fontSize: '16px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <Button
+                title="Отмена"
+                variant="outline"
+                fullWidth
+                onPress={() => setShowEditModal(false)}
+              />
+              <Button
+                title="Сохранить"
+                variant="primary"
+                fullWidth
+                loading={isLoading}
+                onPress={handleSaveProfile}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

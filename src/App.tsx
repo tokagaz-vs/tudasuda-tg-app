@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { useTelegram } from './hooks/useTelegram';
+import { useAutoAuth } from './hooks/useAutoAuth'; // Добавь импорт
 import { HomePage } from './pages/HomePage';
 import { QuestsListPage } from './pages/QuestsListPage';
 import { QuestDetailPage } from './pages/QuestDetailPage';
@@ -12,6 +13,7 @@ import { DevAuth } from './components/DevAuth';
 function AppContent() {
   const { theme } = useTheme();
   const { webApp } = useTelegram();
+  const { user } = useAutoAuth(); // Добавь эту строку
 
   useEffect(() => {
     webApp.ready();
@@ -64,6 +66,23 @@ function AppContent() {
       
       {/* Тестовая авторизация для разработки */}
       <DevAuth />
+      
+      {/* Показываем текущего пользователя в dev режиме */}
+      {import.meta.env.DEV && user && (
+        <div style={{
+          position: 'fixed',
+          bottom: '10px',
+          left: '10px',
+          padding: '8px 12px',
+          backgroundColor: theme.colors.surface,
+          borderRadius: '8px',
+          fontSize: '11px',
+          color: theme.colors.textSecondary,
+          zIndex: 9997,
+        }}>
+          👤 {user.username} (ID: {user.id})
+        </div>
+      )}
     </div>
   );
 }

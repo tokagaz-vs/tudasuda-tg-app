@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuthStore } from '../store/authStore';
+import { useTelegram } from '../hooks/useTelegram';
 import { questService } from '../services/quest.service';
+import { AuthService } from '../services/auth.service';
 import { telegram } from '../utils/telegram';
 import { Button, Card, GlassPanel } from '../components/ui';
 import type { QuestWithDetails, UserProgress } from '../types';
@@ -22,7 +24,8 @@ export const QuestDetailPage = () => {
   const { questId } = useParams<{ questId: string }>();
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { user } = useAuthStore();
+  const { user: telegramUser } = useTelegram();
+  const { user, setUser } = useAuthStore();
 
   const [quest, setQuest] = useState<QuestWithDetails | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
@@ -56,8 +59,34 @@ export const QuestDetailPage = () => {
   };
 
   const handleStartQuest = async () => {
-    if (!user || !quest) {
-      telegram.showAlert('Необходимо войти в систему');
+    if (!quest) return;
+
+    // Если нет user, пробуем синхронизировать с Telegram
+    let currentUser = user;
+    if (!currentUser && telegramUser) {
+      const { data } = await AuthService.syncWithTelegram(telegramUser);
+      if (data) {
+        setUser(data);
+        currentUser = data;
+      }
+    }
+
+    // Если все еще нет user, используем данные из Telegram
+    if (!currentUser && telegramUser) {
+      currentUser = {
+        id: telegramUser.id.toString(),
+        username: telegramUser.username || `user${telegramUser.id}`,
+        full_name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+        avatar_url: telegramUser.photo_url,
+        points: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setUser(currentUser);
+    }
+
+    if (!currentUser) {
+      telegram.showAlert('Откройте приложение через Telegram');
       return;
     }
 
@@ -69,7 +98,7 @@ export const QuestDetailPage = () => {
       return;
     }
 
-    const { error } = await questService.startQuest(user.id, quest.id);
+    const { error } = await questService.startQuest(currentUser.id, quest.id);
 
     if (error) {
       telegram.showAlert('Не удалось начать квест');
