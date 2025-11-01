@@ -17,6 +17,7 @@ import {
   Sparkles,
   Zap,
   Target,
+  User,
 } from 'lucide-react';
 
 export const HomePage = () => {
@@ -286,6 +287,12 @@ export const HomePage = () => {
           gap: '12px',
         }}
       >
+        <QuickActionButton
+         icon={User}
+         label="Профиль"
+         color={theme.colors.secondary}
+         onPress={() => navigate('/profile')}
+        />
         <QuickActionButton
           icon={Target}
           label="Квесты"
