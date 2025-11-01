@@ -22,7 +22,7 @@ import {
 export const HomePage = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const { user: telegramUser, webApp } = useTelegram();
+  const { user: telegramUser } = useTelegram();
   const { user, setUser } = useAuthStore();
   const [popularQuests, setPopularQuests] = useState<Quest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,17 +40,14 @@ export const HomePage = () => {
   }, []);
 
   const authenticateUser = async () => {
-    if (!telegramUser) return;
+  if (!telegramUser) return;
 
-    const { data } = await AuthService.authenticateWithTelegram(
-      telegramUser,
-      webApp.initData
-    );
+  const { data } = await AuthService.authenticateWithTelegram(telegramUser);
 
-    if (data) {
-      setUser(data);
-    }
-  };
+  if (data) {
+    setUser(data);
+  }
+};
 
   const loadPopularQuests = async () => {
     setIsLoading(true);

@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../services/supabase';
-import { telegram } from '../utils/telegram';
 import type { Profile } from '../types';
-import { Trophy, Star, Medal } from 'lucide-react';
+import { Trophy, Star } from 'lucide-react';
 
 interface LeaderboardUser extends Profile {
   rank: number;

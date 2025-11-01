@@ -69,7 +69,7 @@ export const QuestDetailPage = () => {
       return;
     }
 
-    const { data, error } = await questService.startQuest(user.id, quest.id);
+    const { error } = await questService.startQuest(user.id, quest.id);
 
     if (error) {
       telegram.showAlert('Не удалось начать квест');

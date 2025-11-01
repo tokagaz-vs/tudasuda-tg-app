@@ -3,7 +3,7 @@ import type { Profile, TelegramUser } from '../types';
 
 export class AuthService {
   // Аутентификация через Telegram
-  static async authenticateWithTelegram(telegramUser: TelegramUser, initData: string) {
+  static async authenticateWithTelegram(telegramUser: TelegramUser) {
     try {
       // Проверяем существующего пользователя
       const { data: existingProfile } = await supabase

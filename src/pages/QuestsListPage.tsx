@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { questService } from '../services/quest.service';
 import { telegram } from '../utils/telegram';
-import { Button, Card } from '../components/ui';
+import { Card } from '../components/ui';
 import type { Quest, QuestCategory, QuestFilters, QuestDifficulty } from '../types';
 import { DIFFICULTY_LEVELS } from '../constants';
 import {
@@ -25,7 +25,6 @@ export const QuestsListPage = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [categories, setCategories] = useState<QuestCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   const [filters, setFilters] = useState<QuestFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,12 +56,6 @@ export const QuestsListPage = () => {
   const loadQuests = async () => {
     const { data } = await questService.getQuests(filters);
     if (data) setQuests(data);
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadQuests();
-    setRefreshing(false);
   };
 
   const handleSearch = () => {
