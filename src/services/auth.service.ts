@@ -13,14 +13,14 @@ export class AuthService {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // Используем maybeSingle вместо single
+        .maybeSingle();
 
-      if (fetchError) {
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('❌ Ошибка получения профиля:', fetchError);
       }
 
       if (existingProfile) {
-        console.log('✅ Профиль найден, обновляем данные');
+        console.log('✅ Профиль найден:', existingProfile);
         
         // Обновляем данные из Telegram
         const { data: updated, error: updateError } = await supabase
@@ -33,11 +33,10 @@ export class AuthService {
           })
           .eq('id', userId)
           .select()
-          .maybeSingle(); // Используем maybeSingle
+          .single();
 
         if (updateError) {
           console.error('❌ Ошибка обновления профиля:', updateError);
-          return { data: existingProfile, error: updateError };
         }
 
         return { data: updated || existingProfile, error: null };
@@ -45,12 +44,12 @@ export class AuthService {
 
       console.log('📝 Создаем новый профиль');
 
-      // Создаем новый профиль без лишних полей
+      // Создаем новый профиль БЕЗ is_premium
       const newProfile = {
         id: userId,
         username: telegramUser.username || `user${userId}`,
         full_name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-        avatar_url: telegramUser.photo_url,
+        avatar_url: telegramUser.photo_url || null,
         points: 0,
       };
 
@@ -60,11 +59,13 @@ export class AuthService {
         .from('profiles')
         .insert(newProfile)
         .select()
-        .maybeSingle(); // Используем maybeSingle
+        .single();
 
       if (error) {
         console.error('❌ Ошибка создания профиля:', error);
-        console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
+        console.error('❌ Код ошибки:', error.code);
+        console.error('❌ Сообщение:', error.message);
+        console.error('❌ Детали:', error.details);
       } else {
         console.log('✅ Профиль создан:', data);
       }

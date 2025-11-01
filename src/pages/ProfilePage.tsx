@@ -17,8 +17,6 @@ import {
   HelpCircle,
   Info,
   LogOut,
-  Zap,
-  Crown,
 } from 'lucide-react';
 
 export const ProfilePage = () => {
@@ -118,20 +116,18 @@ export const ProfilePage = () => {
     if (data) {
       setUser(data);
       setShowEditModal(false);
-      telegram.showAlert('Профиль обновлен!');
+      alert('Профиль обновлен!');
     } else {
-      telegram.showAlert('Ошибка при обновлении профиля');
       console.error('Profile update error:', error);
+      alert('Ошибка при обновлении профиля');
     }
   };
 
   const handleSignOut = () => {
-    telegram.showConfirm('Вы уверены, что хотите выйти?').then((confirmed) => {
-      if (confirmed) {
-        setUser(null);
-        navigate('/');
-      }
-    });
+    if (confirm('Вы уверены, что хотите выйти?')) {
+      setUser(null);
+      navigate('/');
+    }
   };
 
   const StatCard = ({
@@ -305,24 +301,6 @@ export const ProfilePage = () => {
             ) : (
               '👤'
             )}
-            {user?.is_premium && (
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '16px',
-                  backgroundColor: 'rgba(0,0,0,0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Crown size={16} color="#FFD700" />
-              </div>
-            )}
           </div>
 
           {/* Имя */}
@@ -391,26 +369,6 @@ export const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Premium баннер (если не премиум) */}
-      {!user?.is_premium && (
-        <div style={{ padding: '0 20px 20px' }}>
-          <Card variant="gradient" gradient={[theme.colors.secondary, '#18A0FB']}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <Crown size={32} color="#FFFFFF" />
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#FFFFFF', marginBottom: '4px' }}>
-                  Попробуй Premium
-                </h3>
-                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-                  Получи эксклюзивные рамки и бонусы
-                </p>
-              </div>
-              <Zap size={24} color="#FFFFFF" />
-            </div>
-          </Card>
-        </div>
-      )}
-
       {/* Меню */}
       <div style={{ padding: '0 20px' }}>
         <Card variant="glass" padding={0}>
@@ -418,13 +376,13 @@ export const ProfilePage = () => {
             icon={Bell}
             title="Уведомления"
             subtitle="Управление уведомлениями"
-            onPress={() => telegram.showAlert('В разработке')}
+            onPress={() => alert('В разработке')}
           />
           <MenuItem
             icon={Shield}
             title="Приватность"
             subtitle="Настройки конфиденциальности"
-            onPress={() => telegram.showAlert('В разработке')}
+            onPress={() => alert('В разработке')}
           />
           <MenuItem
             icon={HelpCircle}
@@ -436,7 +394,7 @@ export const ProfilePage = () => {
             icon={Info}
             title="О приложении"
             subtitle="Версия 1.0.0"
-            onPress={() => telegram.showAlert('TudaSuda v1.0.0\n\n© 2024 Все права защищены')}
+            onPress={() => alert('TudaSuda v1.0.0\n\n© 2024 Все права защищены')}
           />
           <MenuItem icon={LogOut} title="Выйти" onPress={handleSignOut} danger />
         </Card>
