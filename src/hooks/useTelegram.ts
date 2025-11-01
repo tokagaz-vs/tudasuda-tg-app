@@ -9,8 +9,18 @@ export const useTelegram = () => {
     WebApp.ready();
     WebApp.expand();
     
+    console.log('📱 Telegram WebApp initialized');
+    console.log('📱 Platform:', WebApp.platform);
+    console.log('📱 Version:', WebApp.version);
+    console.log('📱 InitData:', WebApp.initData);
+    console.log('📱 InitDataUnsafe:', WebApp.initDataUnsafe);
+    
     if (WebApp.initDataUnsafe.user) {
-      setUser(WebApp.initDataUnsafe.user as TelegramUser);
+      const telegramUser = WebApp.initDataUnsafe.user as TelegramUser;
+      console.log('👤 Telegram User:', telegramUser);
+      setUser(telegramUser);
+    } else {
+      console.warn('⚠️ No Telegram user data available');
     }
   }, []);
 

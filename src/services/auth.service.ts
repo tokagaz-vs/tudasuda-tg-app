@@ -7,6 +7,8 @@ export class AuthService {
     try {
       const userId = telegramUser.id.toString();
       
+      console.log('🔄 Синхронизация профиля для ID:', userId);
+      
       // Пробуем получить существующий профиль
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
@@ -15,6 +17,8 @@ export class AuthService {
         .single();
 
       if (existingProfile) {
+        console.log('✅ Профиль найден, обновляем данные');
+        
         // Обновляем данные из Telegram (на случай если изменились)
         const { data: updated, error: updateError } = await supabase
           .from('profiles')
@@ -28,18 +32,26 @@ export class AuthService {
           .select()
           .single();
 
-        return { data: updated, error: updateError };
+        if (updateError) {
+          console.error('❌ Ошибка обновления профиля:', updateError);
+        }
+
+        return { data: updated || existingProfile, error: updateError };
       }
+
+      console.log('📝 Создаем новый профиль');
 
       // Создаем новый профиль
       const newProfile = {
         id: userId,
         username: telegramUser.username || `user${userId}`,
         full_name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-        avatar_url: telegramUser.photo_url,
+        avatar_url: telegramUser.photo_url || null,
         points: 0,
         is_premium: false,
       };
+
+      console.log('📤 Новый профиль:', newProfile);
 
       const { data, error } = await supabase
         .from('profiles')
@@ -47,9 +59,15 @@ export class AuthService {
         .select()
         .single();
 
+      if (error) {
+        console.error('❌ Ошибка создания профиля:', error);
+      } else {
+        console.log('✅ Профиль создан:', data);
+      }
+
       return { data, error };
     } catch (error) {
-      console.error('Sync error:', error);
+      console.error('❌ Критическая ошибка синхронизации:', error);
       return { data: null, error };
     }
   }

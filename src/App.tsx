@@ -2,22 +2,25 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { useTelegram } from './hooks/useTelegram';
-import { useAutoAuth } from './hooks/useAutoAuth'; // Добавь импорт
+import { useAutoAuth } from './hooks/useAutoAuth';
 import { HomePage } from './pages/HomePage';
 import { QuestsListPage } from './pages/QuestsListPage';
 import { QuestDetailPage } from './pages/QuestDetailPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DevAuth } from './components/DevAuth';
+import { DebugPanel } from './components/DebugPanel';
 
 function AppContent() {
   const { theme } = useTheme();
   const { webApp } = useTelegram();
-  const { user } = useAutoAuth(); // Добавь эту строку
+  const { user } = useAutoAuth();
 
   useEffect(() => {
     webApp.ready();
     webApp.expand();
+    
+    console.log('🚀 App initialized');
     
     // Проверяем поддержку методов перед использованием
     try {
@@ -67,6 +70,9 @@ function AppContent() {
       {/* Тестовая авторизация для разработки */}
       <DevAuth />
       
+      {/* Debug панель для разработки */}
+      <DebugPanel />
+      
       {/* Показываем текущего пользователя в dev режиме */}
       {import.meta.env.DEV && user && (
         <div style={{
@@ -79,6 +85,7 @@ function AppContent() {
           fontSize: '11px',
           color: theme.colors.textSecondary,
           zIndex: 9997,
+          boxShadow: theme.shadows.sm.boxShadow,
         }}>
           👤 {user.username} (ID: {user.id})
         </div>
