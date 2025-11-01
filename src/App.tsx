@@ -7,6 +7,7 @@ import { QuestsListPage } from './pages/QuestsListPage';
 import { QuestDetailPage } from './pages/QuestDetailPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { DevAuth } from './components/DevAuth';
 
 function AppContent() {
   const { theme } = useTheme();
@@ -54,12 +55,15 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/quests" element={<QuestsListPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/quest/:questId" element={<QuestDetailPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      
+      {/* Тестовая авторизация для разработки */}
+      <DevAuth />
     </div>
   );
 }

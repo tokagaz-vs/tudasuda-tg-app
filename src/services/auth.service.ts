@@ -2,27 +2,43 @@ import { supabase } from './supabase';
 import type { Profile, TelegramUser } from '../types';
 
 export class AuthService {
-  // Аутентификация через Telegram
-  static async authenticateWithTelegram(telegramUser: TelegramUser) {
+  // Получить или создать профиль на основе Telegram данных
+  static async syncWithTelegram(telegramUser: TelegramUser): Promise<{ data: Profile | null; error: any }> {
     try {
-      // Проверяем существующего пользователя
-      const { data: existingProfile } = await supabase
+      const userId = telegramUser.id.toString();
+      
+      // Пробуем получить существующий профиль
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', telegramUser.id.toString())
+        .eq('id', userId)
         .single();
 
       if (existingProfile) {
-        return { data: existingProfile, error: null };
+        // Обновляем данные из Telegram (на случай если изменились)
+        const { data: updated, error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            username: telegramUser.username || existingProfile.username,
+            full_name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+            avatar_url: telegramUser.photo_url || existingProfile.avatar_url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId)
+          .select()
+          .single();
+
+        return { data: updated, error: updateError };
       }
 
-      // Создаем нового пользователя
-      const newProfile: Partial<Profile> = {
-        id: telegramUser.id.toString(),
-        username: telegramUser.username || telegramUser.first_name,
+      // Создаем новый профиль
+      const newProfile = {
+        id: userId,
+        username: telegramUser.username || `user${userId}`,
         full_name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
         avatar_url: telegramUser.photo_url,
         points: 0,
+        is_premium: false,
       };
 
       const { data, error } = await supabase
@@ -33,31 +49,8 @@ export class AuthService {
 
       return { data, error };
     } catch (error) {
-      console.error('Auth error:', error);
+      console.error('Sync error:', error);
       return { data: null, error };
     }
-  }
-
-  // Получить профиль пользователя
-  static async getProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    return { data, error };
-  }
-
-  // Обновить профиль
-  static async updateProfile(userId: string, updates: Partial<Profile>) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId)
-      .select()
-      .single();
-
-    return { data, error };
   }
 }

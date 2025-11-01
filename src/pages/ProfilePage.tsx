@@ -72,13 +72,16 @@ export const ProfilePage = () => {
   }, [navigate]);
 
   const authenticateUser = async () => {
-    if (!telegramUser) return;
+  if (!telegramUser) return;
 
-    const { data } = await AuthService.authenticateWithTelegram(telegramUser);
-    if (data) {
-      setUser(data);
-    }
-  };
+  const { data, error } = await AuthService.syncWithTelegram(telegramUser);
+  
+  if (data) {
+    setUser(data);
+  } else {
+    console.error('Failed to sync profile:', error);
+  }
+};
 
   const loadUserStats = async () => {
     if (!user) return;
